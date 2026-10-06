@@ -13,6 +13,7 @@
     "test": "node --experimental-strip-types scripts/verify.ts",
     "test:ui": "node --experimental-strip-types scripts/verify-ui.ts",
     "check": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "deploy": "vercel deploy --prod",
     "setup": "npm install && npm run build:bible"
   },
   "dependencies": {

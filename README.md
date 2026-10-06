@@ -35,6 +35,7 @@ To do it in one step: `npm run setup`.
 | `npm run check` | Typecheck, lint, `npm run test` and a production build |
 | `npm run build:bible` | Download and generate the scripture data |
 | `npm run test:ui` | 41 real-browser checks (needs the servers below) |
+| `npm run deploy` | Build and ship to Vercel (`vercel deploy --prod`) |
 
 ### Browser checks
 
@@ -54,6 +55,24 @@ npm run test:ui                          # terminal 3
 It is deliberately outside `npm run check`: that suite must stay runnable on a
 machine with no browser installed. It fails the run if the page logs any
 console error.
+
+Point it at a deployment instead of the local preview with `UI_URL`:
+
+```bash
+UI_URL=https://<site> npm run test:ui
+```
+
+## Hosting
+
+The site is static files with hash-based routing, so it needs no rewrite rules
+or server functions. `vercel.json` builds it the way a fresh clone would —
+`npm run build:bible` regenerates the scripture, then `npm run build`
+typechecks and bundles it — and `.vercelignore` keeps `public/bible/` (110 MB)
+out of the upload, since it is rebuilt on the build machine instead.
+
+```bash
+npm run deploy        # vercel deploy --prod
+```
 
 ## Using it
 
@@ -120,12 +139,13 @@ into `public/bible/<id>/`:
 | `corpus.txt` | Every verse joined by `U+0001` | Search |
 | `addresses.txt` | `book:chapter:verse` per corpus entry | Mapping hits back to references |
 
-Both `public/` copies and `.gz` siblings are generated. The app prefers the
-`.gz` sibling when the browser supports `DecompressionStream`, which matters
-because Vite's dev server does not compress `public/`. The production build
-drops the `.gz` copies, since a real host compresses on its own — so
-`fetchText` rejects an HTML response rather than feeding the SPA shell to the
-decompressor.
+Both `public/` copies and `.gz` siblings are generated, and both ship in the
+build: the app prefers the `.gz` sibling when the browser supports
+`DecompressionStream`, which matters because Vite's dev server does not
+compress `public/`. `fetchText` only hands bytes to the decompressor when they
+really are gzip, and rejects an HTML response, so a host that serves the file
+already decompressed — or answers a missing one with the SPA shell — falls
+through to the plain asset instead.
 
 `scripts/books.mjs` is the single source of truth for the 66 books. It also
 generates `src/data/books.generated.ts`, so the app and the pipeline can never
@@ -165,11 +185,11 @@ lines of hash parsing, and read-aloud is the Web Speech API.
 
 ## Notes and limits
 
-- `public/bible/` is 110 MB on disk (~24.6 MB compressed) and is gitignored. It
-  is reproducible, so committing it would bloat the repo for no benefit. A
-  deploy is ~86 MB raw, which compresses to ~24.6 MB; each version loads on
-  demand, so a visitor only downloads the one they open plus the one they
-  search.
+- `public/bible/` is 110 MB on disk (~86 MB of text plus ~24.6 MB of `.gz`
+  siblings) and is gitignored. It is reproducible, so committing it would bloat
+  the repo for no benefit. A build output is ~114 MB with the `.gz` copies
+  included; each version loads on demand, so a visitor only downloads the one
+  they open plus the one they search.
 - Only one version's corpus is in memory at a time, plus any book files already
   visited. Search therefore always runs within the currently selected version,
   not across all of them. Cross-version *reading* is what the Compare pane is

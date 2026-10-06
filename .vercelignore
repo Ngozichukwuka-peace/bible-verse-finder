@@ -1,0 +1,8 @@
+# Vercel uploads source and builds on its own machine. Excluding the 114 MB of
+# generated scripture and the local build output keeps the upload well inside
+# the 100 MB Hobby source limit; the build command regenerates it there.
+node_modules
+dist
+public/bible
+.cache
+*.local

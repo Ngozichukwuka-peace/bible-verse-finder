@@ -241,7 +241,9 @@ async function main() {
   )
 
   await mkdir(OUT_ROOT, { recursive: true })
-  await writeFile(join(OUT_ROOT, 'index.json'), JSON.stringify({ translations: results.map((r) => r.index) }))
+  // writeFileGz, not writeFile: the loader probes the .gz sibling of this file
+  // like every other asset, and a missing one is a 404 rather than a miss.
+  await writeFileGz(join(OUT_ROOT, 'index.json'), JSON.stringify({ translations: results.map((r) => r.index) }))
 
   log('')
   for (const { index, outDir } of results) {

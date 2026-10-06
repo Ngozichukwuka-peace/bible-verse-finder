@@ -65,7 +65,9 @@ async function main() {
   await Network.setCacheDisabled({ cacheDisabled: true })
 
   Log.entryAdded(({ entry }) => {
-    if (entry.level === 'error') errors.push(entry.text)
+    // The URL is not in entry.text, and "Failed to load resource" without one
+    // is unactionable — it is the only clue to which asset went missing.
+    if (entry.level === 'error') errors.push(entry.url ? `${entry.text} @ ${entry.url}` : entry.text)
   })
 
   const evaluate = async (expression) => {
@@ -284,6 +286,10 @@ async function main() {
   check('theme persisted', (await evaluate(`JSON.parse(localStorage.getItem('biblevf:settings')).theme`)) === 'dark')
 
   console.log('\nverse of the day')
+  // The card fetches a whole book payload, so on a real network it lands a
+  // beat after everything else. Waiting keeps the assertion about the feature
+  // rather than about the round trip.
+  await waitFor(client, `${text('.votd-text')} !== null`, 'the daily verse to load')
   check('a daily verse is offered', (await evaluate(text('.votd-text'))) !== null)
   check('with a reference', (await evaluate(text('.votd-ref')))?.includes(':'))
 

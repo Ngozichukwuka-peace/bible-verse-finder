@@ -211,10 +211,10 @@ export default function App() {
   const book = route.book !== null ? (bookByNr(route.book) ?? null) : null
   const openBook = route.book ?? (book?.nr ?? null)
 
-  useEffect(() => {
-    if (book !== null) prefetchBook(translationId, book.nr)
-  }, [book, translationId])
-
+  // No eager prefetch of route.book here: it would run before the version
+  // index arrives, so it cannot know whether the translation ships the book,
+  // and a speculative request for one it does not ships as a 404. The effect
+  // below loads the same payload the moment the index is in.
   useEffect(() => {
     if (openBook === null || !metaReady) return
     // The index already knows which books this version ships, so never ask for

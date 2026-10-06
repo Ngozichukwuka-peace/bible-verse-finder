@@ -6,8 +6,9 @@ import type { Reference } from '../types.ts'
  * scripts/build-bible.mjs. The Vite dev server does not compress public/, and
  * the search corpus is megabytes, so this is a real saving locally too.
  *
- * Production output ships with the .gz siblings removed, so a request for one
- * comes back as the SPA shell with a 200. Only hand real gzip bytes onward.
+ * The .gz siblings ship in the production output as well; a host is free to
+ * serve them already decompressed, so only hand bytes to the decompressor when
+ * they really are gzip, and fall back to the plain asset otherwise.
  *
  * Note: no import.meta.env here — scripts/verify.ts runs this module under
  * plain Node, where import.meta.env does not exist.
